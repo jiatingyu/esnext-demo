@@ -87,21 +87,26 @@ function Parent(name) {
   this.name = name;
 }
 Parent.prototype.sayHello = function() {
-  console.log('Hello',this.name);
+  console.log('Hello from ' + this.name);
 };
 
 function Child(name, age) {
+  // 创建一个没有实例的Parent对象
   var fakeParent = Object.create(Parent.prototype);
-  Parent.call(fakeParent, name); // 这里创建了一个没有实例的父类对象
-  this.parent = fakeParent;
+  Parent.call(fakeParent, name);
   this.age = age;
 }
+
 Child.prototype = Object.create(Parent.prototype);
 Child.prototype.constructor = Child;
 
-var child = new Child('Kimi', 25);
-// 寄生组合继承的实现较为复杂，需要理解寄生模式和原型链的设置
+Child.prototype.sayBye = function() {
+  console.log('Bye from ' + this.name);
+};
+
+var child = new Child('ziyu', 25);
 child.sayHello(); // 输出: Hello from ziyu
+child.sayBye(); // 输出: Bye from ziyu
 
 // class Parent {
 //   constructor(name) {
