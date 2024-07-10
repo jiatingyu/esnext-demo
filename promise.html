@@ -1,0 +1,44 @@
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>promise 测试</title>
+</head>
+
+<body>
+    <script src="./promise.js"> </script>
+    <script>
+        // let p = new Promise((resolve, reject) => {
+        //     reject('出错了')
+        //     resolve('success') // 上面已经改变了状态,下面不会执行
+        // })
+        // let p = new Promise((resolve, reject) => {
+        //     throw new Error('...')
+        // })
+        // console.log(p);
+        let p = new MyPromise((resolve, reject) => {
+            // resolve('success')
+            reject('出错了')
+        })
+        
+        p.then((val) => {
+            console.log(val);
+        }, (reason) => {
+            console.log(reason);
+        })
+        console.log(p);
+    </script>
+
+    <!-- <script>
+        let p = new Promise((resolve, reject) => {
+            resolve('success')
+        }).then((val) => {
+            console.log(val);
+        }, (reason) => {
+            console.log(reason);
+        })
+        console.log(p);
+    </script>
+</body> -->
+
+</html>
