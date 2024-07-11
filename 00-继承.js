@@ -3,7 +3,7 @@
 // 优点： 父类新增原型方法或属性，子类都能访问到，可共用方法
 // 缺点：
 // + 创建子类实例时，无法向父类构造函数传参。
-// + 引用类型的属性会被所有实例共享
+// + 引用类型（比如对象/数组）的属性会被所有实例共享
 //  因为两个实例使用的是同一个原型对象。它们的内存空间是共享的，当一个发生变化的时候，另外一个也随之进行了变化，这就是使用原型链继承方式的一个缺点。
 
 // function Parent() {
@@ -32,7 +32,7 @@
 
 
 // 构造函数继承
-// 优点：可以向父类构造函数传参，解决原型链继承无法传参的问题。
+// 优点：可以向父类构造函数传参（通过call传参），解决原型链继承无法传参的问题。
 // 缺点：每次创建子类实例时都会创建父类的方法，（无法实现函数复用），导致内存浪费
 // function Parent(name) {
 //   this.name = name;
@@ -71,7 +71,7 @@
 // }
 
 // // 通过原型链继承Parent的方法
-// Child.prototype = Object.create(Parent.prototype);    // 第二次调用
+// Child.prototype = new Parent()   // 第二次调用
 // Child.prototype.constructor = Child;
 
 // Child.prototype.sayBye = function() {
@@ -92,8 +92,7 @@ Parent.prototype.sayHello = function() {
 
 function Child(name, age) {
   // 创建一个没有实例的Parent对象
-  var fakeParent = Object.create(Parent.prototype);
-  Parent.call(fakeParent, name);
+  Parent.call(this, name);
   this.age = age;
 }
 
@@ -104,9 +103,9 @@ Child.prototype.sayBye = function() {
   console.log('Bye from ' + this.name);
 };
 
-var child = new Child('ziyu', 25);
-child.sayHello(); // 输出: Hello from ziyu
-child.sayBye(); // 输出: Bye from ziyu
+var child = new Child('ziyu_jia', 25);
+child.sayHello(); // 输出: Hello from ziyu_jia
+child.sayBye(); // 输出: Bye from ziyu_jia
 
 // class Parent {
 //   constructor(name) {
@@ -127,6 +126,6 @@ child.sayBye(); // 输出: Bye from ziyu
 //   }
 // }
 
-// var child = new Child('Kimi', 25);
-// child.sayHello(); // 输出: Hello from Kimi
-// child.sayBye(); // 输出: Bye from Kimi
+// var child = new Child('ziyu', 25);
+// child.sayHello(); // 输出: Hello from ziyu
+// child.sayBye(); // 输出: Bye from ziyu

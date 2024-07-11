@@ -1,14 +1,14 @@
 let fibonacci = {
+  friends: ["盖伦", "阿木木", "安妮"],
   [Symbol.iterator]() {
-    let pre = 0,
-      cur = 1;
+    let len = this.friends.length;
+    let index = 0;
     return {
-      next() {
-        [pre, cur] = [cur, pre + cur];
-        if(cur >100){
-            return { done: true, value: cur };
+      next:()=> {
+        if (index <= len - 1) {
+          return { done: false, value: this.friends[index++] };
         }else{
-            return { done: false, value: cur };
+          return { done: true, value: null };
         }
       },
     };
@@ -17,5 +17,4 @@ let fibonacci = {
 
 for (var n of fibonacci) {
   console.log(n);
-
 }
