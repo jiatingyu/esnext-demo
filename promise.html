@@ -8,37 +8,72 @@
 <body>
     <script src="./promise.js"> </script>
     <script>
-        // let p = new Promise((resolve, reject) => {
+        // 1. 基本结构探索
+        // let p = new MyPromise((resolve, reject) => {
         //     reject('出错了')
         //     resolve('success') // 上面已经改变了状态,下面不会执行
         // })
-        // let p = new Promise((resolve, reject) => {
-        //     throw new Error('...')
+        // console.log(p);
+
+        // 2. 异常处理
+        // let p = new MyPromise((resolve, reject) => {
+        //     console.log('开始执行。。');
+        //     throw new Error('内部执行错误')
+        //     resolve('success')
         // })
         // console.log(p);
-        let p = new MyPromise((resolve, reject) => {
-            // resolve('success')
-            reject('出错了')
-        })
-        
-        p.then((val) => {
-            console.log(val);
-        }, (reason) => {
-            console.log(reason);
-        })
-        console.log(p);
-    </script>
 
-    <!-- <script>
-        let p = new Promise((resolve, reject) => {
-            resolve('success')
+        // 3. then方法，链式调用
+        // new MyPromise((resolve, reject) => {
+        //     resolve('success')
+        //     // reject('出错了')
+        // }).then((val) => {
+        //     console.log(val);
+        //     return "成功111"
+        // }).then(val=>{
+        //     console.log(val);
+        //     return "成功222"
+        // }).then(val=>{
+        //     console.log(val);
+        // })
+
+        // 4. 异步
+        // new MyPromise((resolve, reject) => {
+        //     setTimeout(() => {
+        //         resolve('async')
+        //     }, 2000);
+        // }).then((val) => {
+        //     console.log(val);
+        //     return "成功111"
+        // }).then(val=>{
+        //     console.log(val);
+        //     return "成功222"
+        // })
+        // 5.
+        let p = new MyPromise((resolve, reject) => {
+            setTimeout(() => {
+                resolve('1s 后 success')
+            }, 1000);
         }).then((val) => {
             console.log(val);
-        }, (reason) => {
-            console.log(reason);
-        })
-        console.log(p);
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve('2s 后 then回调')
+                }, 1000);
+            })
+        }).then(val => {
+            console.log(val);
+            // return new Promise((resolve)=>{
+            //     setTimeout(() => {
+            //         resolve('3s 后 then 回调')
+            //     }, 1000);
+            // })
+            return p
+        }).then(val => {
+            console.log(val);
+        }, msg => console.log(msg))
     </script>
-</body> -->
+
+</body>
 
 </html>
