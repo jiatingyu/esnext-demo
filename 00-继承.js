@@ -1,4 +1,4 @@
-// 原型链继承
+// // 原型链继承
 
 // 优点： 父类新增原型方法或属性，子类都能访问到，可共用方法
 // 缺点：
@@ -56,6 +56,7 @@
 // console.log(child.sayHello()); 
 // console.log(child.arr, child1.arr); // 输出: [ 1, 1 ] []
 
+// 寄生继承
 // 优点: 可以传参，并且可以复用父类方法,可以避免引用类型属性共享的问题。
 // 缺点: 父类构造函数被调用了两次，一次在设置原型时，一次在构造函数中，可能会导致不必要性能开销。
 // function Parent(name) {
@@ -71,7 +72,7 @@
 // }
 
 // // 通过原型链继承Parent的方法
-// Child.prototype = new Parent()   // 第二次调用
+// Child.prototype = Object.create(Parent.prototype);    // 第二次调用
 // Child.prototype.constructor = Child;
 
 // Child.prototype.sayBye = function() {
@@ -83,29 +84,48 @@
 // child.sayBye(); // 输出: Bye from ziyu
 
 
-function Parent(name) {
-  this.name = name;
-}
-Parent.prototype.sayHello = function() {
-  console.log('Hello from ' + this.name);
-};
+// 组合继承
+// function Parent(name) {
+//   this.name = name;
+// }
+// Parent.prototype.sayHello = function() {
+//   console.log('Hello from ' + this.name);
+// };
 
-function Child(name, age) {
-  // 创建一个没有实例的Parent对象
-  Parent.call(this, name);
-  this.age = age;
-}
+// function Child(name, age) {
+//   // 创建一个没有实例的Parent对象
+//   Parent.call(this, name);
+//   this.age = age;
+// }
 
-Child.prototype = Object.create(Parent.prototype);
-Child.prototype.constructor = Child;
+// // 通过原型链继承Parent的方法
+// Child.prototype = new Parent()   // 第二次调用
+// Child.prototype.constructor = Child;
 
-Child.prototype.sayBye = function() {
-  console.log('Bye from ' + this.name);
-};
+// Child.prototype.sayBye = function() {
+//   console.log('Bye from ' + this.name);
+// };
 
-var child = new Child('ziyu_jia', 25);
-child.sayHello(); // 输出: Hello from ziyu_jia
-child.sayBye(); // 输出: Bye from ziyu_jia
+
+
+// Child.prototype.sayBye = function() {
+//   console.log('Bye from ' + this.name);
+// };
+
+// var child = new Child('ziyu_jia', 25);
+// child.sayHello(); // 输出: Hello from ziyu_jia
+// child.sayBye(); // 输出: Bye from ziyu_jia
+
+// const person = {
+//   isHuman: false,
+//   printIntroduction: function () {
+//     console.log(`My name is ${this.name}.`); 
+//   },
+// };
+
+// const me = Object.create(person);
+// me.name='ziyu'
+// console.log( me.printIntroduction());  // My name is ziyu
 
 // class Parent {
 //   constructor(name) {
