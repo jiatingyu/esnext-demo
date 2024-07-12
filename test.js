@@ -32,3 +32,4 @@ const toChinesNum = (num) => {
 
 
 console.log(toChinesNum(1500));
+

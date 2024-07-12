@@ -1,144 +1,226 @@
 
-// 实现步骤
-// 1. 新建Promise需要使用new关键字，那他肯定是作为面向对象的方式调用的，Promise是一个类。
-// 2. new Promise(fn) 的时候需要传一个函数进去，说明Promise的参数是一个函数
-// 3. 构造函数传进去的fn会收到resolve和reject两个函数，用来表示Promise成功和失败，说明构造函数里面还需要resolve和reject这两个函数，这两个函数的作用是改变Promise的状态。
-// 4. 根据规范，promise 有 pending，fulfilled，rejected三个状态，初始状态为pending，调用resolve会将其改为fulfilled，调用reject会改为rejected。
-// 5. promise实例对象建好后可以调用then方法，说明then是一个实例方法。而且then方法可以链式调用，说明他很方法返回一个新的promise实例,(原生Promise不能自己返回自己)
-
 // 初始三个变量
-const PENDING = 'pending';
-const FULFILLED = 'fulfilled';
-const REJECTED = 'rejected';
+const PENDING = "pending";
+const FULFILLED = "fulfilled";
+const REJECTED = "rejected";
 
-class Promise {
-    // 初始化参数
-    state = PENDING;
-    value = null;
-    reason = "";
-    // 构造函数
-    constructor(exec) {
-        // 传递两个函数,绑定 this 避免 this指向出错
-        try {
-            exec(this.resolve.bind(this), this.reject.bind(this))
-        } catch (error) {
-            this.reject(error.message)
-        }
+class MyPromise {
+  // 初始化参数
+  state = PENDING;
+  value = null;
+  reason = "";
+  // 构造函数
+  constructor(exec) {
+    // 传递两个函数,绑定 this 避免 this指向出错
+    try {
+      exec(this.resolve.bind(this), this.reject.bind(this));
+    } catch (error) {
+      console.log("exec。出错");
+      this.reject(error.message);
     }
-    resolve(value) {
-        // 判断状态, 修改状态 并赋值
-        if (this.state === PENDING) {
-            this.state = FULFILLED
-            this.value = value
-            while (this.successCallback.length) {
-                this.successCallback.shift()()
+  }
+  resolve(value) {
+    // 判断状态, 修改状态 并赋值
+    if (this.state === PENDING) {
+      this.state = FULFILLED;
+      this.value = value;
+      // 这里遵循，先进先出，shift最前面的函数， 然后执行它
+      while (this.successCallback.length) {
+        this.successCallback.shift()();
+      }
+    }
+  }
+  reject(reason) {
+    // 判断状态, 修改状态 并赋值
+    if (this.state === PENDING) {
+      this.state = REJECTED;
+      this.reason = reason;
+      while (this.failCallback.length) {
+        this.failCallback.shift()();
+      }
+    }
+  }
+  successCallback = [];
+  failCallback = [];
+  then(onFulfilled, onRejected) {
+    onFulfilled = onFulfilled ? onFulfilled : (value) => value;
+    onRejected = onRejected
+      ? onRejected
+      : (reason) => {
+          throw Error(reason);
+        };
+    // 返回一个新的实例
+    let p = new Promise((resolve, reject) => {
+      if (this.state === FULFILLED) {
+        queueMicrotask(() => {
+          try {
+            let res = onFulfilled(this.value);
+            resolveRes(res, p, resolve, reject);
+          } catch (error) {
+            reject(error.message);
+          }
+        });
+      } else if (this.state === REJECTED) {
+        queueMicrotask(() => {
+          try {
+            let res = onRejected(this.reason);
+            resolveRes(res, p, resolve, reject);
+          } catch (error) {
+            reject(error.message);
+          }
+        });
+      } else {
+        this.successCallback.push(() => {
+          queueMicrotask(() => {
+            try {
+              let res = onFulfilled(this.value);
+              // 拿到我们生成的实例，和用户的实例做对比
+              resolveRes(res, p, resolve, reject);
+            } catch (error) {
+              reject(error.message);
             }
+          });
+        });
+        this.failCallback.push(() => {
+          queueMicrotask(() => {
+            try {
+              let res = onRejected(this.reason);
+              resolveRes(res, p, resolve, reject);
+            } catch (error) {
+              reject(error.message);
+            }
+          });
+        });
+      }
+    });
+    return p;
+  }
+  catch(e) {
+    return this.then(null, e);
+  }
+  static resolve(val) {
+    // 1. 普通值就直接返回
+    // 2. Promise 需要直接运行，需要放在构造函数中
+    return val instanceof Promise ? val : new Promise((s) => s(val));
+  }
+  finally(callback) {
+    // 1. callback 需要执行
+    // 2. 需要保证 原先的promise状态
+    return this.then(
+      (value) => {
+        return Promise.resolve(callback()).then(() => value);
+      },
+      (reason) => {
+        return Promise.resolve(callback()).then(() => {
+          throw reason;
+        });
+      }
+    );
+  }
 
+  static all(data) {
+    // 1. 参数判定
+    return new Promise((resolve, reject) => {
+      if (Array.isArray(data)) {
+        let res = [];
+        let resIndex = 0;
+        // 空数组 就直接返回
+        if (data.length === 0) {
+          resolve(res);
+          return;
         }
-    }
-    reject(reason) {
-        // 判断状态, 修改状态 并赋值
-        if (this.state === PENDING) {
-            this.state = REJECTED
-            this.reason = reason
-            while (this.failCallback.length) {
-                this.failCallback.shift()()
-            }
+        const addRes = (val, i) => {
+          res[i] = val;
+          resIndex++;
+          // 这里不能使用 res.length, 切记 因为： arr[10] , arr.length ===10
+          if (resIndex === data.length) {
+            resolve(res);
+          }
+        };
+        for (let index = 0; index < data.length; index++) {
+          const item = data[index];
+          if (item instanceof MyPromise) {
+            item.then(
+              (val) => {
+                // 拿到值再增加
+                addRes(val, index);
+              },
+              (msg) => {
+                reject(msg);
+              }
+            );
+          } else {
+            addRes(item, index);
+          }
         }
-    }
-    successCallback = []
-    failCallback = []
-    then(onFulfilled, onRejected) {
-        onFulfilled = onFulfilled ? onFulfilled : (value) => value
-        onRejected = onRejected ? onRejected : (reason) => { throw Error(reason) }
-        // 返回一个新的实例
-        let p = new Promise((resolve, reject) => {
-            if (this.state === FULFILLED) {
-                queueMicrotask(() => {
-                    let res = onFulfilled(this.value)
-                    resolveRes(res, p, resolve, reject)
-                })
-            } else if (this.state === REJECTED) {
-                queueMicrotask(() => {
-                    let res = reject(onRejected(this.reason))
-                    resolveRes(res, p, resolve, reject)
-                })
-            } else {
-                this.successCallback.push(() => {
-                    queueMicrotask(() => {
-                        let res = onFulfilled(this.value)
-                        resolveRes(res, p, resolve, reject)
-                    })
-                })
-                this.failCallback.push(() => {
-                    queueMicrotask(() => {
-                        let res = onRejected(this.reason)
-                        resolveRes(res, p, resolve, reject)
-                    })
-                })
+      } else {
+        reject("all 参数必须是数组");
+      }
+    });
+  }
+
+  static race(data) {
+    return new MyPromise((resolve, reject) => {
+      if (Array.isArray(data)) {
+        // 空数组 就直接返回
+        if (data.length === 0) {
+          resolve();
+          return;
+        }
+        for (let index = 0; index < data.length; index++) {
+          const item = data[index];
+          if (item instanceof MyPromise) {
+            MyPromise.resolve(item).then(
+              (val) => resolve(val),
+              (msg) => reject(msg)
+            );
+          }
+        }
+      } else {
+        reject("race 参数必须是数组");
+      }
+    });
+  }
+  static allSettled(data) {
+    // 1. 参数判定
+    return new Promise((resolve, reject) => {
+      if (Array.isArray(data)) {
+        let res = [];
+        let resIndex = 0;
+        // 空数组 就直接返回
+        if (data.length === 0) {
+          resolve(res);
+          return;
+        }
+        for (let index = 0; index < data.length; index++) {
+          const item = data[index];
+          MyPromise.resolve(item).then(
+            (value) => {
+              res[index] = { status: "fulfilled", value };
+              resIndex++;
+              if (resIndex === data.length) resolve(res);
+            },
+            (reason) => {
+              res[index] = { status: "rejected", reason };
+              resIndex++;
+              if (resIndex === data.length) resolve(res);
             }
-        })
-        return p
-    }
+          );
+        }
+      } else {
+        reject("allSettled 参数必须是数组");
+      }
+    });
+  }
 }
 function resolveRes(res, promise, resolve, reject) {
-    console.log(res,promise);
-    if (promise === res) {
-        reject(new Error("不能是相同实例"));
-        return;
-    }
-    if (res instanceof Promise) {
-        res.then(resolve, reject)
-    } else {
-        resolve(res)
-    }
+  if (promise === res) {
+    reject(new Error("不能是相同实例"));
+    return;
+  }
+  if (res instanceof Promise) {
+    res.then(resolve, reject); // 如果是promise，就调用它的then方法，并把当前的resolve，reject传递下去，它结束时就能调用
+  } else {
+    resolve(res);
+  }
 }
-// export default Promise
-
-
-
-
-// 4.
-// then(onFulfilled, onRejected) {
-//     onFulfilled = onFulfilled ? onFulfilled : (value) => value
-//     onRejected = onRejected ? onRejected : (reason) => { throw Error(reason) }
-//     // 返回一个新的实例
-//     let p = new Promise((resolve, reject) => {
-//         if (this.state === FULFILLED) {
-//             resolve(onFulfilled(this.value))
-//         } else if (this.state === REJECTED) {
-//             reject(onRejected(this.reason))
-//         } else {
-//             this.successCallback.push(() => resolve(onFulfilled(this.value)))
-//             this.failCallback.push(() => reject(onRejected(this.reason)))
-//         }
-//     })
-//     return p
-// }
-
-
-// 5.
-// then(onFulfilled, onRejected) {
-//     onFulfilled = onFulfilled ? onFulfilled : (value) => value
-//     onRejected = onRejected ? onRejected : (reason) => { throw Error(reason) }
-//     // 返回一个新的实例
-//     let p = new Promise((resolve, reject) => {
-//         if (this.state === FULFILLED) {
-//             let res = onFulfilled(this.value)
-//             resolveRes(res, resolve, reject)
-//         } else if (this.state === REJECTED) {
-//             let res = reject(onRejected(this.reason))
-//             resolveRes(res, resolve, reject)
-//         } else {
-//             this.successCallback.push(() => {
-//                 let res = onFulfilled(this.value)
-//                 resolveRes(res, resolve, reject)
-//             })
-//             this.failCallback.push(() => {
-//                 let res = onRejected(this.reason)
-//                 resolveRes(res, resolve, reject)
-//             })
-//         }
-//     })
-//     return p
-// }

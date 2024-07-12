@@ -1,81 +1,190 @@
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
+  <head>
+    <meta charset="UTF-8" />
     <title>promise 测试</title>
-</head>
+  </head>
 
-<body>
-    <script src="./promise.js"> </script>
+  <body>
+    <script src="./promise.js"></script>
     <script>
-        // 1. 基本结构探索
-        // let p = new MyPromise((resolve, reject) => {
-        //     reject('出错了')
-        //     resolve('success') // 上面已经改变了状态,下面不会执行
-        // })
-        // console.log(p);
+      // 1. 基本结构探索
+      // let p = new MyPromise((resolve, reject) => {
+      //     reject('出错了')
+      //     resolve('success') // 上面已经改变了状态,下面不会执行
+      // })
+      // console.log(p);
 
-        // 2. 异常处理
-        // let p = new MyPromise((resolve, reject) => {
-        //     console.log('开始执行。。');
-        //     throw new Error('内部执行错误')
-        //     resolve('success')
-        // })
-        // console.log(p);
+      // 2. 异常处理
+      // let p = new MyPromise((resolve, reject) => {
+      //     console.log('开始执行。。');
+      //     throw new Error('内部执行错误')
+      //     resolve('success')
+      // })
+      // console.log(p);
 
-        // 3. then方法，链式调用
-        // new MyPromise((resolve, reject) => {
-        //     resolve('success')
-        //     // reject('出错了')
-        // }).then((val) => {
-        //     console.log(val);
-        //     return "成功111"
-        // }).then(val=>{
-        //     console.log(val);
-        //     return "成功222"
-        // }).then(val=>{
-        //     console.log(val);
-        // })
+      // 3. then方法，链式调用
+      // new MyPromise((resolve, reject) => {
+      //     resolve('success')
+      //     // reject('出错了')
+      // }).then((val) => {
+      //     console.log(val);
+      //     return "成功111"
+      // }).then(val=>{
+      //     console.log(val);
+      //     return "成功222"
+      // }).then(val=>{
+      //     console.log(val);
+      // })
 
-        // 4. 异步
-        // new MyPromise((resolve, reject) => {
-        //     setTimeout(() => {
-        //         resolve('async')
-        //     }, 2000);
-        // }).then((val) => {
-        //     console.log(val);
-        //     return "成功111"
-        // }).then(val=>{
-        //     console.log(val);
-        //     return "成功222"
-        // })
-        // 5.
-        let p = new MyPromise((resolve, reject) => {
-            setTimeout(() => {
-                resolve('1s 后 success')
-            }, 1000);
-        }).then((val) => {
-            console.log(val);
-            return new Promise((resolve) => {
-                setTimeout(() => {
-                    resolve('2s 后 then回调')
-                }, 1000);
-            })
-        }).then(val => {
-            console.log(val);
-            // return new Promise((resolve)=>{
-            //     setTimeout(() => {
-            //         resolve('3s 后 then 回调')
-            //     }, 1000);
-            // })
-            return p
-        }).then(val => {
-            console.log(val);
-        }, msg => console.log(msg))
+      // 4. 异步
+      // new MyPromise((resolve, reject) => {
+      //     setTimeout(() => {
+      //         resolve('async')
+      //     }, 2000);
+      // }).then((val) => {
+      //     console.log(val);
+      //     return "成功111"
+      // }).then(val=>{
+      //     console.log(val);
+      //     return "成功222"
+      // })
+      // 5. 每次调用then都会返回一个新创建的promise对象
+      //   let p = new MyPromise((resolve, reject) => {
+      //     setTimeout(() => {
+      //       resolve("1s 后 success");
+      //     }, 1000);
+      //   });
+      //   let p1 = p
+      //     .then((val) => {
+      //       console.log(val);
+      //       return p1;
+      //     })
+      //   5.2 处理then返回的promise
+      // let p = new MyPromise((resolve, reject) => {
+      //   setTimeout(() => {
+      //     resolve("1s 后 success");
+      //   }, 1000);
+      // });
+      // let p1 = p
+      //   .then((val) => {
+      //     console.log(val);
+      //     return new Promise((resolve) => {
+      //       setTimeout(() => {
+      //         resolve("2s 后 then回调");
+      //       }, 1000);
+      //     });
+      //   })
+      //   .then((val) => {
+      //     console.log(val);
+      //     return new Promise((resolve) => {
+      //       setTimeout(() => {
+      //         resolve("3s 后 then 回调");
+      //       }, 1000);
+      //     });
+      //   })
+      //   .then((val) => {
+      //     console.log(val);
+      //   });
+
+      // 6. catch
+      // let p = new MyPromise((resolve, reject) => {
+      //   setTimeout(() => {
+      //     // resolve("1s 后 success");
+      //     reject('抛出错误')
+      //   }, 1000);
+      // }).then(
+      //     (val) => {
+      //       console.log("success:", val);
+      //     },
+      //     (e) => {
+      //       console.log("出错了", e);
+      //       throw new Error('....')
+      //     }
+      //   )
+      //   .catch((e) => {
+      //     console.log("尾部捕获错误：", e);
+      //   });
+      // 7. resolve
+      // MyPromise.resolve(123).then((val) => {
+      //   console.log("resolve:", val);
+      // });
+      // let p = new Promise((resolve, reject) => {
+      //   setTimeout(() => {
+      //     resolve("1s 后输出");
+      //   }, 1000);
+      // })
+
+      // MyPromise.resolve(p).then((val) => {
+      //   console.log("resolve:", val);
+      // });
+      // 8. finally
+      // let p = new MyPromise((resolve, reject) => {
+      //   setTimeout(() => {
+      //     reject("抛出错误");
+      //   }, 1000);
+      // })
+      //   .finally((e) => {
+      //     console.log("finally执行了");
+      //   })
+      //   .then(null, (msg) => {
+      //     console.log("finally后面的then ： ", msg);
+      //   });
+
+      // 9. all的实现
+      // let p1 = new MyPromise((resolve, reject) => {
+      //   setTimeout(() => {
+      //     // resolve(200);
+      //     reject("出错了。。。");
+      //   }, 2000);
+      // });
+      // MyPromise.all([100, p1, 300]).then(
+      //   (res) => {
+      //     console.log("2s 后 all 执行结果：", res);
+      //   },
+      //   (msg) => {
+      //     console.log("2s后 出错了：", msg);
+      //   }
+      // );
+      // 10. race 的实现
+      // let p1 = new MyPromise((resolve, reject) => {
+      //   setTimeout(() => {
+      //     resolve(200);
+      //   }, 2000);
+      // });
+      // let p2 = new MyPromise((resolve, reject) => {
+      //   setTimeout(() => {
+      //     resolve(300);
+      //   }, 3000);
+      // });
+      // MyPromise.race([p2, p1]).then(
+      //   (res) => {
+      //     console.log("race 执行结果：", res);
+      //   },
+      //   (msg) => {
+      //     console.log("race 出错了：", msg);
+      //   }
+      // );
+      // 11. allSettled
+      let p1 = new MyPromise((resolve, reject) => {
+        setTimeout(() => {
+          resolve(200);
+        }, 2000);
+      });
+      let p2 = new MyPromise((resolve, reject) => {
+        setTimeout(() => {
+          reject(300);
+        }, 3000);
+      });
+      MyPromise.allSettled([p2, p1]).then(
+        (res) => {
+          console.log("allSettled 执行结果：", res);
+        },
+        (msg) => {
+          console.log("allSettled 出错了：", msg);
+        }
+      );
     </script>
-
-</body>
-
+  </body>
 </html>
 
 <!-- 年龄大于等于50岁 -->
